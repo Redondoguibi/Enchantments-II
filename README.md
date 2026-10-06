@@ -10,10 +10,52 @@ This mod overhauls the minecraft's enchanting system based on Minecraft Dungeons
 - Mod ID: `enchantsii`
 - Base package: `com.redondoguibi.enchantsii`
 
-## Concept
+## Enchanting system
 
-Enchants II reworks the enchanting table around reusable vanilla enchanted books. A book acts as a permanent source for its enchantment, while applying or upgrading that enchantment costs XP points and lapis lazuli.
+Right-clicking a vanilla enchanting table opens the Enchants II interface instead of the random vanilla enchanting interface.
+
+### Reusable enchanted books
+
+Vanilla enchanted books are reusable enchantment sources.
+
+1. Put the item to enchant in the item slot.
+2. Put a vanilla enchanted book in the book slot.
+3. Select one enchantment stored in the book.
+4. Pay the resource cost.
+5. The enchantment is applied or upgraded by one level.
+6. The enchanted book stays in the table and is not consumed.
+
+A book only unlocks levels up to the level stored on that book. For example, a Sharpness III book can take an item from no Sharpness to Sharpness I, then II, then III, but no further.
+
+Books containing multiple enchantments are supported. The interface lists their enchantments separately and paginates them when necessary.
+
+### Costs
+
+Every application or upgrade costs a fixed **150 raw XP points**.
+
+The lapis lazuli cost depends on the level being applied:
+
+- Level I: 2 lapis
+- Level II: 3 lapis
+- Level III: 4 lapis
+- Level IV: 5 lapis
+- Level V: 6 lapis
+- In general: `lapis cost = target enchantment level + 1`
+
+Creative-mode players do not consume XP or lapis.
+
+### Compatibility
+
+Enchants II respects the vanilla enchantment supported-item rules and vanilla enchantment conflicts.
+
+Bookshelves do not change the cost or available enchantments. Progression comes from obtaining enchanted books and paying XP/lapis.
+
+### Anvils
+
+Anvils can still repair and rename items and can still combine enchanted books with enchanted books.
+
+Applying an enchanted book directly to equipment in an anvil is disabled so that the reusable enchanting-table system cannot be bypassed by consuming the book.
 
 ## Status
 
-Early development. The NeoForge project scaffold is prepared and the enchanting overhaul itself has not been implemented yet.
+Core enchanting overhaul implemented.

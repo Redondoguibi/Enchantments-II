@@ -1,0 +1,16 @@
+{
+  "menu.enchantsii.enchanting": "Enchants II",
+  "screen.enchantsii.item": "Item",
+  "screen.enchantsii.book": "Book",
+  "screen.enchantsii.xp": "XP: %s / %s",
+  "screen.enchantsii.lapis": "Lapis: %s",
+  "screen.enchantsii.insert_book": "Insert a reusable enchanted book.",
+  "screen.enchantsii.empty_book": "This book has no stored enchantments.",
+  "screen.enchantsii.insert_item": "Insert a compatible item.",
+  "screen.enchantsii.invalid_book": "Invalid enchantment level.",
+  "screen.enchantsii.not_supported": "This enchantment does not support the item.",
+  "screen.enchantsii.conflict": "Conflicts with an enchantment already on the item.",
+  "screen.enchantsii.maxed": "Maximum source level reached: %s",
+  "screen.enchantsii.ready": "Lv. %s -> %s | %s XP | %s lapis",
+  "screen.enchantsii.page": "%s / %s"
+}

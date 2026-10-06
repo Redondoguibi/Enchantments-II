@@ -1,0 +1,16 @@
+{
+  "menu.enchantsii.enchanting": "Enchants II",
+  "screen.enchantsii.item": "Item",
+  "screen.enchantsii.book": "Livro",
+  "screen.enchantsii.xp": "XP: %s / %s",
+  "screen.enchantsii.lapis": "Lapis: %s",
+  "screen.enchantsii.insert_book": "Coloque um livro encantado reutilizavel.",
+  "screen.enchantsii.empty_book": "Este livro nao possui encantamentos armazenados.",
+  "screen.enchantsii.insert_item": "Coloque um item compativel.",
+  "screen.enchantsii.invalid_book": "Nivel de encantamento invalido.",
+  "screen.enchantsii.not_supported": "Este encantamento nao e compativel com o item.",
+  "screen.enchantsii.conflict": "Conflita com um encantamento que ja esta no item.",
+  "screen.enchantsii.maxed": "Nivel maximo do livro atingido: %s",
+  "screen.enchantsii.ready": "Nv. %s -> %s | %s XP | %s lapis",
+  "screen.enchantsii.page": "%s / %s"
+}
