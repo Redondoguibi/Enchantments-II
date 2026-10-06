@@ -28,14 +28,13 @@ public final class EnchantsScreen extends AbstractContainerScreen<EnchantsMenu> 
     private static final int XP_TEXT_Y = 29;
     private static final int LAPIS_TEXT_Y = 48;
 
-    // Free strip between the custom controls and the player inventory.
-    // It is used to select/apply an enchantment while preserving support
-    // for enchanted books that contain more than one enchantment.
-    private static final int SELECT_Y = 65;
-    private static final int SELECT_HEIGHT = 17;
-    private static final int SELECT_LEFT_ARROW_X = 8;
-    private static final int SELECT_RIGHT_ARROW_X = 158;
-    private static final int SELECT_ARROW_WIDTH = 10;
+    // The free strip between the custom controls and the player inventory is
+    // a real, visually explicit enchant button.
+    private static final int SELECT_Y = 63;
+    private static final int SELECT_HEIGHT = 20;
+    private static final int SELECT_LEFT_ARROW_X = 7;
+    private static final int SELECT_RIGHT_ARROW_X = 160;
+    private static final int SELECT_ARROW_WIDTH = 9;
     private static final int SELECT_TEXT_X = 20;
     private static final int SELECT_TEXT_WIDTH = 136;
 
@@ -69,8 +68,6 @@ public final class EnchantsScreen extends AbstractContainerScreen<EnchantsMenu> 
     @Override
     protected void renderLabels(GuiGraphics graphics, int mouseX, int mouseY) {
         // The custom texture already identifies both input slots with icons.
-        // Intentionally omit the vanilla title/inventory labels so the layout
-        // stays identical to the supplied texture.
     }
 
     private void renderEnchantingControls(GuiGraphics graphics, int mouseX, int mouseY) {
@@ -83,7 +80,8 @@ public final class EnchantsScreen extends AbstractContainerScreen<EnchantsMenu> 
             Component message = menu.getBookStack().isEmpty()
                     ? Component.translatable("screen.enchantsii.insert_book")
                     : Component.translatable("screen.enchantsii.empty_book");
-            drawSelectionText(graphics, message, 0xFF606060);
+
+            drawDisabledMessage(graphics, message);
             return;
         }
 
@@ -101,7 +99,8 @@ public final class EnchantsScreen extends AbstractContainerScreen<EnchantsMenu> 
                 && evaluation.ready()
                 && EnchantingLogic.countLapis(minecraft.player.getInventory()) >= evaluation.lapisCost());
 
-        // Raw XP is a fixed price whenever there is a valid enchanted-book source.
+        boolean canEnchant = evaluation.ready() && xpAffordable && lapisAffordable;
+
         drawCost(
                 graphics,
                 Integer.toString(EnchantingLogic.XP_COST),
@@ -109,8 +108,6 @@ public final class EnchantsScreen extends AbstractContainerScreen<EnchantsMenu> 
                 XP_TEXT_Y
         );
 
-        // Lapis depends on the next level being applied, so only show a numeric
-        // price when the current item/enchantment combination can actually be applied.
         drawCost(
                 graphics,
                 evaluation.ready() ? Integer.toString(evaluation.lapisCost()) : "-",
@@ -123,16 +120,24 @@ public final class EnchantsScreen extends AbstractContainerScreen<EnchantsMenu> 
                 evaluation.ready() ? evaluation.nextLevel() : evaluation.maxLevel()
         );
 
-        int selectionColor = selectionColor(evaluation, xpAffordable && lapisAffordable);
-        drawSelectionText(graphics, enchantmentName, selectionColor);
+        boolean hovered = isInside(
+                mouseX,
+                mouseY,
+                leftPos + SELECT_TEXT_X,
+                topPos + SELECT_Y,
+                SELECT_TEXT_WIDTH,
+                SELECT_HEIGHT
+        );
+
+        drawEnchantButton(graphics, enchantmentName, canEnchant, hovered);
 
         if (enchantments.size() > 1) {
-            int arrowColor = 0xFF404040;
+            int arrowColor = 0xFF3A332B;
             graphics.drawString(
                     font,
                     selectedEnchantment > 0 ? "<" : "-",
                     leftPos + SELECT_LEFT_ARROW_X,
-                    topPos + SELECT_Y + 4,
+                    topPos + SELECT_Y + 6,
                     arrowColor,
                     false
             );
@@ -140,15 +145,22 @@ public final class EnchantsScreen extends AbstractContainerScreen<EnchantsMenu> 
                     font,
                     selectedEnchantment + 1 < enchantments.size() ? ">" : "-",
                     leftPos + SELECT_RIGHT_ARROW_X,
-                    topPos + SELECT_Y + 4,
+                    topPos + SELECT_Y + 6,
                     arrowColor,
                     false
             );
         }
+
+        if (hovered) {
+            Component tooltip = canEnchant
+                    ? Component.translatable("screen.enchantsii.tooltip.click")
+                    : blockedReason(evaluation, xpAffordable, lapisAffordable);
+            graphics.renderTooltip(font, tooltip, mouseX, mouseY);
+        }
     }
 
     private void drawCost(GuiGraphics graphics, String value, boolean affordable, int relativeY) {
-        int color = affordable ? 0xFF40372A : 0xFF9A3535;
+        int color = affordable ? 0xFF2F5A2F : 0xFFA12E2E;
         graphics.drawCenteredString(
                 font,
                 value,
@@ -158,22 +170,117 @@ public final class EnchantsScreen extends AbstractContainerScreen<EnchantsMenu> 
         );
     }
 
-    private void drawSelectionText(GuiGraphics graphics, Component text, int color) {
-        String trimmed = font.plainSubstrByWidth(text.getString(), SELECT_TEXT_WIDTH);
+    private void drawEnchantButton(
+            GuiGraphics graphics,
+            Component enchantmentName,
+            boolean enabled,
+            boolean hovered
+    ) {
+        int x = leftPos + SELECT_TEXT_X;
+        int y = topPos + SELECT_Y;
+        int width = SELECT_TEXT_WIDTH;
+
+        int border;
+        int background;
+        int titleColor;
+        int nameColor;
+
+        if (enabled) {
+            border = hovered ? 0xFF315F31 : 0xFF3D713D;
+            background = hovered ? 0xFFB8D7A8 : 0xFFA9CA99;
+            titleColor = 0xFF204320;
+            nameColor = 0xFF162D16;
+        } else {
+            border = hovered ? 0xFF8E4444 : 0xFF765050;
+            background = hovered ? 0xFFD2A5A5 : 0xFFC6ACAC;
+            titleColor = 0xFF6E2020;
+            nameColor = 0xFF5A2929;
+        }
+
+        graphics.fill(x, y, x + width, y + SELECT_HEIGHT, border);
+        graphics.fill(x + 1, y + 1, x + width - 1, y + SELECT_HEIGHT - 1, background);
+
+        Component action = Component.translatable(
+                enabled
+                        ? "screen.enchantsii.click_to_enchant"
+                        : "screen.enchantsii.cannot_enchant"
+        );
+
         graphics.drawCenteredString(
                 font,
-                Component.literal(trimmed),
-                leftPos + SELECT_TEXT_X + SELECT_TEXT_WIDTH / 2,
-                topPos + SELECT_Y + 4,
-                color
+                action,
+                x + width / 2,
+                y + 2,
+                titleColor
+        );
+
+        String trimmedName = font.plainSubstrByWidth(enchantmentName.getString(), width - 8);
+        graphics.drawCenteredString(
+                font,
+                Component.literal(trimmedName),
+                x + width / 2,
+                y + 11,
+                nameColor
         );
     }
 
-    private int selectionColor(EnchantingLogic.Evaluation evaluation, boolean affordable) {
+    private void drawDisabledMessage(GuiGraphics graphics, Component message) {
+        int x = leftPos + SELECT_TEXT_X;
+        int y = topPos + SELECT_Y;
+        int width = SELECT_TEXT_WIDTH;
+
+        graphics.fill(x, y, x + width, y + SELECT_HEIGHT, 0xFF777777);
+        graphics.fill(x + 1, y + 1, x + width - 1, y + SELECT_HEIGHT - 1, 0xFFC1C1C1);
+
+        String trimmed = font.plainSubstrByWidth(message.getString(), width - 8);
+        graphics.drawCenteredString(
+                font,
+                Component.literal(trimmed),
+                x + width / 2,
+                y + 6,
+                0xFF555555
+        );
+    }
+
+    private Component blockedReason(
+            EnchantingLogic.Evaluation evaluation,
+            boolean xpAffordable,
+            boolean lapisAffordable
+    ) {
+        if (evaluation.ready()) {
+            if (!xpAffordable && !lapisAffordable) {
+                return Component.translatable(
+                        "screen.enchantsii.tooltip.need_both",
+                        EnchantingLogic.XP_COST,
+                        evaluation.lapisCost()
+                );
+            }
+
+            if (!xpAffordable) {
+                return Component.translatable(
+                        "screen.enchantsii.tooltip.need_xp",
+                        EnchantingLogic.XP_COST
+                );
+            }
+
+            if (!lapisAffordable) {
+                return Component.translatable(
+                        "screen.enchantsii.tooltip.need_lapis",
+                        evaluation.lapisCost()
+                );
+            }
+        }
+
         return switch (evaluation.status()) {
-            case READY -> affordable ? 0xFF3F513A : 0xFF9A3535;
-            case MAXED -> 0xFF8A681E;
-            default -> 0xFF7A3A3A;
+            case NO_TARGET -> Component.translatable("screen.enchantsii.insert_item");
+            case INVALID_BOOK -> Component.translatable("screen.enchantsii.invalid_book");
+            case NOT_SUPPORTED -> Component.translatable("screen.enchantsii.not_supported");
+            case CONFLICT -> Component.translatable("screen.enchantsii.conflict");
+            case MAXED -> Component.translatable(
+                    "screen.enchantsii.maxed",
+                    evaluation.maxLevel()
+            );
+            case READY -> Component.translatable("screen.enchantsii.cannot_enchant");
         };
     }
 
