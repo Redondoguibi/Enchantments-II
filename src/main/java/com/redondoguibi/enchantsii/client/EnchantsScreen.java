@@ -27,7 +27,7 @@ public final class EnchantsScreen extends AbstractContainerScreen<EnchantsMenu> 
     private static final int LAPIS_TEXT_Y = 48;
 
     private static final int SELECT_Y = 63;
-    private static final int SELECT_HEIGHT = 20;
+    private static final int SELECT_HEIGHT = 18;
     private static final int SELECT_LEFT_ARROW_X = 7;
     private static final int SELECT_RIGHT_ARROW_X = 160;
     private static final int SELECT_ARROW_WIDTH = 9;
@@ -133,7 +133,7 @@ public final class EnchantsScreen extends AbstractContainerScreen<EnchantsMenu> 
                     font,
                     selectedEnchantment > 0 ? "<" : "-",
                     leftPos + SELECT_LEFT_ARROW_X,
-                    topPos + SELECT_Y + 6,
+                    topPos + SELECT_Y + 5,
                     arrowColor,
                     false
             );
@@ -141,7 +141,7 @@ public final class EnchantsScreen extends AbstractContainerScreen<EnchantsMenu> 
                     font,
                     selectedEnchantment + 1 < enchantments.size() ? ">" : "-",
                     leftPos + SELECT_RIGHT_ARROW_X,
-                    topPos + SELECT_Y + 6,
+                    topPos + SELECT_Y + 5,
                     arrowColor,
                     false
             );
@@ -178,45 +178,28 @@ public final class EnchantsScreen extends AbstractContainerScreen<EnchantsMenu> 
 
         int border;
         int background;
-        int titleColor;
-        int nameColor;
+        int textColor;
 
         if (enabled) {
-            border = hovered ? 0xFF315F31 : 0xFF3D713D;
-            background = hovered ? 0xFFB8D7A8 : 0xFFA9CA99;
-            titleColor = 0xFF204320;
-            nameColor = 0xFF162D16;
+            border = hovered ? 0xFF446D3D : 0xFF6D7A5B;
+            background = hovered ? 0xFFC7D5B7 : 0xFFB8BEA6;
+            textColor = hovered ? 0xFF183B18 : 0xFF2B4328;
         } else {
-            border = hovered ? 0xFF8E4444 : 0xFF765050;
-            background = hovered ? 0xFFD2A5A5 : 0xFFC6ACAC;
-            titleColor = 0xFF6E2020;
-            nameColor = 0xFF5A2929;
+            border = hovered ? 0xFF8A5A55 : 0xFF81716C;
+            background = hovered ? 0xFFCDB6B0 : 0xFFC0B5B0;
+            textColor = 0xFF75504A;
         }
 
         graphics.fill(x, y, x + width, y + SELECT_HEIGHT, border);
         graphics.fill(x + 1, y + 1, x + width - 1, y + SELECT_HEIGHT - 1, background);
 
-        Component action = Component.translatable(
-                enabled
-                        ? "screen.enchantsii.click_to_enchant"
-                        : "screen.enchantsii.cannot_enchant"
-        );
-
-        graphics.drawCenteredString(
-                font,
-                action,
-                x + width / 2,
-                y + 2,
-                titleColor
-        );
-
-        String trimmedName = font.plainSubstrByWidth(enchantmentName.getString(), width - 8);
+        String trimmedName = font.plainSubstrByWidth(enchantmentName.getString(), width - 12);
         graphics.drawCenteredString(
                 font,
                 Component.literal(trimmedName),
                 x + width / 2,
-                y + 11,
-                nameColor
+                y + 5,
+                textColor
         );
     }
 
@@ -233,7 +216,7 @@ public final class EnchantsScreen extends AbstractContainerScreen<EnchantsMenu> 
                 font,
                 Component.literal(trimmed),
                 x + width / 2,
-                y + 6,
+                y + 5,
                 0xFF555555
         );
     }
