@@ -48,13 +48,11 @@ public final class EnchantsMenu extends AbstractContainerMenu {
             }
         };
 
-        // Coordinates match the two input slots painted into
-        // assets/enchantsii/textures/gui/enchanting_table_2.png.
         addSlot(new Slot(inputs, TARGET_SLOT, 26, 35) {
             @Override
             public boolean mayPlace(ItemStack stack) {
                 return !stack.is(Items.BOOK)
-                        && !stack.is(Items.ENCHANTED_BOOK)
+                        && !EnchantingLogic.isEnchantingSource(stack)
                         && EnchantmentHelper.canStoreEnchantments(stack);
             }
 
@@ -67,7 +65,7 @@ public final class EnchantsMenu extends AbstractContainerMenu {
         addSlot(new Slot(inputs, BOOK_SLOT, 62, 35) {
             @Override
             public boolean mayPlace(ItemStack stack) {
-                return stack.is(Items.ENCHANTED_BOOK);
+                return EnchantingLogic.isEnchantingSource(stack);
             }
 
             @Override
@@ -76,7 +74,6 @@ public final class EnchantsMenu extends AbstractContainerMenu {
             }
         });
 
-        // Standard 176x166 player inventory layout, aligned with the texture.
         for (int row = 0; row < 3; row++) {
             for (int column = 0; column < 9; column++) {
                 addSlot(new Slot(
@@ -181,13 +178,13 @@ public final class EnchantsMenu extends AbstractContainerMenu {
             if (!moveItemStackTo(source, PLAYER_INV_START, PLAYER_INV_END, true)) {
                 return ItemStack.EMPTY;
             }
-        } else if (source.is(Items.ENCHANTED_BOOK)) {
+        } else if (EnchantingLogic.isEnchantingSource(source)) {
             if (!moveItemStackTo(source, BOOK_SLOT, BOOK_SLOT + 1, false)) {
                 return ItemStack.EMPTY;
             }
         } else if (!source.is(Items.BOOK)
-                && EnchantmentHelper.canStoreEnchantments(source)
-                && !source.is(Items.ENCHANTED_BOOK)) {
+                && !EnchantingLogic.isEnchantingSource(source)
+                && EnchantmentHelper.canStoreEnchantments(source)) {
             if (!moveItemStackTo(source, TARGET_SLOT, TARGET_SLOT + 1, false)) {
                 return ItemStack.EMPTY;
             }
