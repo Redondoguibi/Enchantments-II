@@ -53,7 +53,7 @@ public final class EnchantingLogic {
             return new Evaluation(Status.INVALID_BOOK, 0, 0, 0, 0);
         }
 
-        int currentLevel = EnchantmentHelper.getItemEnchantmentLevel(source.enchantment(), target);
+        int currentLevel = target.getEnchantmentLevel(source.enchantment());
 
         if (!source.enchantment().value().canEnchant(target)) {
             return new Evaluation(Status.NOT_SUPPORTED, currentLevel, 0, maxLevel, 0);
