@@ -1,25 +1,19 @@
+# Enchants II
 
-Installation information
-=======
+This mod overhauls the minecraft's enchanting system based on Minecraft Dungeons II.
 
-This template repository can be directly cloned to get you started with a new
-mod. Simply create a new repository cloned from this one, by following the
-instructions provided by [GitHub](https://docs.github.com/en/repositories/creating-and-managing-repositories/creating-a-repository-from-a-template).
+## Target
 
-Once you have your clone, simply open the repository in the IDE of your choice. The usual recommendation for an IDE is either IntelliJ IDEA or Eclipse.
+- Minecraft: 1.21.1
+- Mod loader: NeoForge 21.1.252
+- Java: 21
+- Mod ID: `enchantsii`
+- Base package: `com.redondoguibi.enchantsii`
 
-If at any point you are missing libraries in your IDE, or you've run into problems you can
-run `gradlew --refresh-dependencies` to refresh the local cache. `gradlew clean` to reset everything 
-{this does not affect your code} and then start the process again.
+## Concept
 
-Mapping Names:
-============
-By default, the MDK is configured to use the official mapping names from Mojang for methods and fields 
-in the Minecraft codebase. These names are covered by a specific license. All modders should be aware of this
-license. For the latest license text, refer to the mapping file itself, or the reference copy here:
-https://github.com/NeoForged/NeoForm/blob/main/Mojang.md
+Enchants II reworks the enchanting table around reusable vanilla enchanted books. A book acts as a permanent source for its enchantment, while applying or upgrading that enchantment costs XP points and lapis lazuli.
 
-Additional Resources: 
-==========
-Community Documentation: https://docs.neoforged.net/  
-NeoForged Discord: https://discord.neoforged.net/
+## Status
+
+Early development. The NeoForge project scaffold is prepared and the enchanting overhaul itself has not been implemented yet.
