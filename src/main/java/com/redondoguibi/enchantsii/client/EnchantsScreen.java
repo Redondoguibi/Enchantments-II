@@ -1,226 +1,254 @@
 package com.redondoguibi.enchantsii.client;
 
+import com.redondoguibi.enchantsii.EnchantsII;
 import com.redondoguibi.enchantsii.menu.EnchantingLogic;
 import com.redondoguibi.enchantsii.menu.EnchantsMenu;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.enchantment.Enchantment;
 
 import java.util.List;
 
 public final class EnchantsScreen extends AbstractContainerScreen<EnchantsMenu> {
-    private static final int ROWS_PER_PAGE = 3;
-    private static final int ROW_X = 58;
-    private static final int ROW_Y = 27;
-    private static final int ROW_WIDTH = 182;
-    private static final int ROW_HEIGHT = 25;
-    private static final int ROW_STEP = 28;
-    private static final int NAV_Y = 110;
+    private static final ResourceLocation BACKGROUND =
+            ResourceLocation.fromNamespaceAndPath(
+                    EnchantsII.MOD_ID,
+                    "textures/gui/enchanting_table_2.png"
+            );
 
-    private final Inventory playerInventory;
-    private int page;
+    private static final int GUI_WIDTH = 176;
+    private static final int GUI_HEIGHT = 166;
+
+    // Cost boxes drawn into enchanting_table_2.png.
+    // Top: raw XP points. Bottom: lapis lazuli.
+    private static final int COST_BOX_CENTER_X = 141;
+    private static final int XP_TEXT_Y = 29;
+    private static final int LAPIS_TEXT_Y = 48;
+
+    // Free strip between the custom controls and the player inventory.
+    // It is used to select/apply an enchantment while preserving support
+    // for enchanted books that contain more than one enchantment.
+    private static final int SELECT_Y = 65;
+    private static final int SELECT_HEIGHT = 17;
+    private static final int SELECT_LEFT_ARROW_X = 8;
+    private static final int SELECT_RIGHT_ARROW_X = 158;
+    private static final int SELECT_ARROW_WIDTH = 10;
+    private static final int SELECT_TEXT_X = 20;
+    private static final int SELECT_TEXT_WIDTH = 136;
+
+    private int selectedEnchantment;
 
     public EnchantsScreen(EnchantsMenu menu, Inventory playerInventory, Component title) {
         super(menu, playerInventory, title);
-        this.playerInventory = playerInventory;
-        this.imageWidth = 248;
-        this.imageHeight = 210;
-        this.inventoryLabelY = 120;
+        this.imageWidth = GUI_WIDTH;
+        this.imageHeight = GUI_HEIGHT;
     }
 
     @Override
     protected void containerTick() {
         super.containerTick();
-
-        int pageCount = getPageCount();
-        if (page >= pageCount) {
-            page = Math.max(0, pageCount - 1);
-        }
+        clampSelection();
     }
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         renderBackground(graphics, mouseX, mouseY, partialTick);
         super.render(graphics, mouseX, mouseY, partialTick);
-        renderEnchantments(graphics, mouseX, mouseY);
+        renderEnchantingControls(graphics, mouseX, mouseY);
         renderTooltip(graphics, mouseX, mouseY);
     }
 
     @Override
     protected void renderBg(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
-        int left = leftPos;
-        int top = topPos;
-
-        graphics.fill(left, top, left + imageWidth, top + imageHeight, 0xF0181818);
-        graphics.fill(left + 1, top + 1, left + imageWidth - 1, top + imageHeight - 1, 0xFF2A2A2A);
-
-        drawSlot(graphics, left + 22, top + 35);
-        drawSlot(graphics, left + 22, top + 64);
-
-        graphics.fill(left + 54, top + 12, left + 244, top + 119, 0xFF171717);
-        graphics.fill(left + 55, top + 13, left + 243, top + 118, 0xFF222222);
+        graphics.blit(BACKGROUND, leftPos, topPos, 0, 0, imageWidth, imageHeight);
     }
 
     @Override
     protected void renderLabels(GuiGraphics graphics, int mouseX, int mouseY) {
-        graphics.drawString(font, title, 8, 6, 0xFFE0E0E0, false);
-        graphics.drawString(font, Component.translatable("screen.enchantsii.item"), 8, 24, 0xFFB8B8B8, false);
-        graphics.drawString(font, Component.translatable("screen.enchantsii.book"), 8, 53, 0xFFB8B8B8, false);
-        graphics.drawString(font, playerInventory.getDisplayName(), 8, inventoryLabelY, 0xFFB8B8B8, false);
+        // The custom texture already identifies both input slots with icons.
+        // Intentionally omit the vanilla title/inventory labels so the layout
+        // stays identical to the supplied texture.
     }
 
-    private void renderEnchantments(GuiGraphics graphics, int mouseX, int mouseY) {
+    private void renderEnchantingControls(GuiGraphics graphics, int mouseX, int mouseY) {
         List<EnchantingLogic.BookEnchantment> enchantments = menu.getBookEnchantments();
 
-        if (minecraft != null && minecraft.player != null) {
-            int xp = minecraft.player.totalExperience;
-            int lapis = EnchantingLogic.countLapis(minecraft.player.getInventory());
-            Component resources = Component.translatable("screen.enchantsii.resources", xp, lapis);
-            graphics.drawString(font, trim(resources), leftPos + ROW_X, topPos + 16, 0xFFB8B8B8, false);
-        }
-
         if (enchantments.isEmpty()) {
+            drawCost(graphics, "-", false, XP_TEXT_Y);
+            drawCost(graphics, "-", false, LAPIS_TEXT_Y);
+
             Component message = menu.getBookStack().isEmpty()
                     ? Component.translatable("screen.enchantsii.insert_book")
                     : Component.translatable("screen.enchantsii.empty_book");
-            graphics.drawString(font, trim(message), leftPos + ROW_X, topPos + 40, 0xFFAAAAAA, false);
+            drawSelectionText(graphics, message, 0xFF606060);
             return;
         }
 
-        int start = page * ROWS_PER_PAGE;
-        int end = Math.min(start + ROWS_PER_PAGE, enchantments.size());
+        clampSelection();
+        EnchantingLogic.BookEnchantment source = enchantments.get(selectedEnchantment);
+        EnchantingLogic.Evaluation evaluation =
+                EnchantingLogic.evaluate(menu.getTargetStack(), source);
 
-        for (int absoluteIndex = start; absoluteIndex < end; absoluteIndex++) {
-            int row = absoluteIndex - start;
-            int x = leftPos + ROW_X;
-            int y = topPos + ROW_Y + row * ROW_STEP;
+        boolean hasPlayer = minecraft != null && minecraft.player != null;
+        boolean creative = hasPlayer && minecraft.player.getAbilities().instabuild;
+        boolean xpAffordable = creative
+                || (hasPlayer && minecraft.player.totalExperience >= EnchantingLogic.XP_COST);
+        boolean lapisAffordable = creative
+                || (hasPlayer
+                && evaluation.ready()
+                && EnchantingLogic.countLapis(minecraft.player.getInventory()) >= evaluation.lapisCost());
 
-            EnchantingLogic.BookEnchantment source = enchantments.get(absoluteIndex);
-            EnchantingLogic.Evaluation evaluation = EnchantingLogic.evaluate(menu.getTargetStack(), source);
+        // Raw XP is a fixed price whenever there is a valid enchanted-book source.
+        drawCost(
+                graphics,
+                Integer.toString(EnchantingLogic.XP_COST),
+                xpAffordable,
+                XP_TEXT_Y
+        );
 
-            boolean hovered = isInside(mouseX, mouseY, x, y, ROW_WIDTH, ROW_HEIGHT);
-            boolean affordable = minecraft != null
-                    && minecraft.player != null
-                    && EnchantingLogic.canAfford(minecraft.player, evaluation);
+        // Lapis depends on the next level being applied, so only show a numeric
+        // price when the current item/enchantment combination can actually be applied.
+        drawCost(
+                graphics,
+                evaluation.ready() ? Integer.toString(evaluation.lapisCost()) : "-",
+                evaluation.ready() && lapisAffordable,
+                LAPIS_TEXT_Y
+        );
 
-            int background = hovered ? 0xFF3B3B3B : 0xFF303030;
-            if (evaluation.ready() && affordable) {
-                background = hovered ? 0xFF34513A : 0xFF2A432F;
-            }
+        Component enchantmentName = Enchantment.getFullname(
+                source.enchantment(),
+                evaluation.ready() ? evaluation.nextLevel() : evaluation.maxLevel()
+        );
 
-            graphics.fill(x, y, x + ROW_WIDTH, y + ROW_HEIGHT, background);
+        int selectionColor = selectionColor(evaluation, xpAffordable && lapisAffordable);
+        drawSelectionText(graphics, enchantmentName, selectionColor);
 
-            Component name = Enchantment.getFullname(source.enchantment(), evaluation.maxLevel());
+        if (enchantments.size() > 1) {
+            int arrowColor = 0xFF404040;
             graphics.drawString(
                     font,
-                    trim(name),
-                    x + 4,
-                    y + 3,
-                    evaluation.ready() ? 0xFFF0F0F0 : 0xFFB0B0B0,
+                    selectedEnchantment > 0 ? "<" : "-",
+                    leftPos + SELECT_LEFT_ARROW_X,
+                    topPos + SELECT_Y + 4,
+                    arrowColor,
                     false
             );
-
             graphics.drawString(
                     font,
-                    trim(statusText(evaluation)),
-                    x + 4,
-                    y + 15,
-                    statusColor(evaluation, affordable),
+                    selectedEnchantment + 1 < enchantments.size() ? ">" : "-",
+                    leftPos + SELECT_RIGHT_ARROW_X,
+                    topPos + SELECT_Y + 4,
+                    arrowColor,
                     false
             );
-        }
-
-        int pageCount = getPageCount();
-        if (pageCount > 1) {
-            Component previous = Component.literal(page > 0 ? "<" : "-");
-            Component next = Component.literal(page + 1 < pageCount ? ">" : "-");
-            Component pageText = Component.translatable("screen.enchantsii.page", page + 1, pageCount);
-
-            graphics.drawString(font, previous, leftPos + 62, topPos + NAV_Y, 0xFFE0E0E0, false);
-            graphics.drawCenteredString(font, pageText, leftPos + 149, topPos + NAV_Y, 0xFFB8B8B8);
-            graphics.drawString(font, next, leftPos + 231, topPos + NAV_Y, 0xFFE0E0E0, false);
         }
     }
 
-    private Component statusText(EnchantingLogic.Evaluation evaluation) {
+    private void drawCost(GuiGraphics graphics, String value, boolean affordable, int relativeY) {
+        int color = affordable ? 0xFF40372A : 0xFF9A3535;
+        graphics.drawCenteredString(
+                font,
+                value,
+                leftPos + COST_BOX_CENTER_X,
+                topPos + relativeY,
+                color
+        );
+    }
+
+    private void drawSelectionText(GuiGraphics graphics, Component text, int color) {
+        String trimmed = font.plainSubstrByWidth(text.getString(), SELECT_TEXT_WIDTH);
+        graphics.drawCenteredString(
+                font,
+                Component.literal(trimmed),
+                leftPos + SELECT_TEXT_X + SELECT_TEXT_WIDTH / 2,
+                topPos + SELECT_Y + 4,
+                color
+        );
+    }
+
+    private int selectionColor(EnchantingLogic.Evaluation evaluation, boolean affordable) {
         return switch (evaluation.status()) {
-            case READY -> Component.translatable(
-                    "screen.enchantsii.ready",
-                    evaluation.currentLevel(),
-                    evaluation.nextLevel(),
-                    EnchantingLogic.XP_COST,
-                    evaluation.lapisCost()
-            );
-            case NO_TARGET -> Component.translatable("screen.enchantsii.insert_item");
-            case INVALID_BOOK -> Component.translatable("screen.enchantsii.invalid_book");
-            case NOT_SUPPORTED -> Component.translatable("screen.enchantsii.not_supported");
-            case CONFLICT -> Component.translatable("screen.enchantsii.conflict");
-            case MAXED -> Component.translatable("screen.enchantsii.maxed", evaluation.maxLevel());
+            case READY -> affordable ? 0xFF3F513A : 0xFF9A3535;
+            case MAXED -> 0xFF8A681E;
+            default -> 0xFF7A3A3A;
         };
     }
 
-    private int statusColor(EnchantingLogic.Evaluation evaluation, boolean affordable) {
-        if (evaluation.status() == EnchantingLogic.Status.READY) {
-            return affordable ? 0xFF9CFF9C : 0xFFFF9C9C;
-        }
-
-        if (evaluation.status() == EnchantingLogic.Status.MAXED) {
-            return 0xFFFFD36A;
-        }
-
-        return 0xFFFF8A8A;
-    }
-
-    private Component trim(Component component) {
-        String text = component.getString();
-        String trimmed = font.plainSubstrByWidth(text, ROW_WIDTH - 8);
-        return Component.literal(trimmed);
-    }
-
-    private int getPageCount() {
+    private void clampSelection() {
         int size = menu.getBookEnchantments().size();
-        return Math.max(1, (size + ROWS_PER_PAGE - 1) / ROWS_PER_PAGE);
+        if (size <= 0) {
+            selectedEnchantment = 0;
+            return;
+        }
+
+        if (selectedEnchantment >= size) {
+            selectedEnchantment = size - 1;
+        }
     }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (button == 0) {
             List<EnchantingLogic.BookEnchantment> enchantments = menu.getBookEnchantments();
-            int start = page * ROWS_PER_PAGE;
-            int end = Math.min(start + ROWS_PER_PAGE, enchantments.size());
 
-            for (int absoluteIndex = start; absoluteIndex < end; absoluteIndex++) {
-                int row = absoluteIndex - start;
-                int x = leftPos + ROW_X;
-                int y = topPos + ROW_Y + row * ROW_STEP;
+            if (!enchantments.isEmpty()) {
+                clampSelection();
 
-                if (isInside(mouseX, mouseY, x, y, ROW_WIDTH, ROW_HEIGHT)) {
+                if (enchantments.size() > 1) {
+                    if (selectedEnchantment > 0
+                            && isInside(
+                            mouseX,
+                            mouseY,
+                            leftPos + SELECT_LEFT_ARROW_X - 2,
+                            topPos + SELECT_Y,
+                            SELECT_ARROW_WIDTH + 4,
+                            SELECT_HEIGHT
+                    )) {
+                        selectedEnchantment--;
+                        return true;
+                    }
+
+                    if (selectedEnchantment + 1 < enchantments.size()
+                            && isInside(
+                            mouseX,
+                            mouseY,
+                            leftPos + SELECT_RIGHT_ARROW_X - 2,
+                            topPos + SELECT_Y,
+                            SELECT_ARROW_WIDTH + 4,
+                            SELECT_HEIGHT
+                    )) {
+                        selectedEnchantment++;
+                        return true;
+                    }
+                }
+
+                if (isInside(
+                        mouseX,
+                        mouseY,
+                        leftPos + SELECT_TEXT_X,
+                        topPos + SELECT_Y,
+                        SELECT_TEXT_WIDTH,
+                        SELECT_HEIGHT
+                )) {
                     EnchantingLogic.Evaluation evaluation =
-                            EnchantingLogic.evaluate(menu.getTargetStack(), enchantments.get(absoluteIndex));
+                            EnchantingLogic.evaluate(
+                                    menu.getTargetStack(),
+                                    enchantments.get(selectedEnchantment)
+                            );
 
                     if (minecraft != null
                             && minecraft.player != null
-                            && EnchantingLogic.canAfford(minecraft.player, evaluation)
-                            && minecraft.gameMode != null) {
-                        minecraft.gameMode.handleInventoryButtonClick(menu.containerId, absoluteIndex);
+                            && minecraft.gameMode != null
+                            && EnchantingLogic.canAfford(minecraft.player, evaluation)) {
+                        minecraft.gameMode.handleInventoryButtonClick(
+                                menu.containerId,
+                                selectedEnchantment
+                        );
                     }
 
-                    return true;
-                }
-            }
-
-            int pageCount = getPageCount();
-            if (pageCount > 1) {
-                if (page > 0 && isInside(mouseX, mouseY, leftPos + 58, topPos + NAV_Y - 2, 18, 14)) {
-                    page--;
-                    return true;
-                }
-
-                if (page + 1 < pageCount
-                        && isInside(mouseX, mouseY, leftPos + 226, topPos + NAV_Y - 2, 18, 14)) {
-                    page++;
                     return true;
                 }
             }
@@ -229,13 +257,17 @@ public final class EnchantsScreen extends AbstractContainerScreen<EnchantsMenu> 
         return super.mouseClicked(mouseX, mouseY, button);
     }
 
-    private static boolean isInside(double mouseX, double mouseY, int x, int y, int width, int height) {
-        return mouseX >= x && mouseX < x + width && mouseY >= y && mouseY < y + height;
-    }
-
-    private static void drawSlot(GuiGraphics graphics, int x, int y) {
-        graphics.fill(x - 1, y - 1, x + 17, y + 17, 0xFF101010);
-        graphics.fill(x, y, x + 16, y + 16, 0xFF8B8B8B);
-        graphics.fill(x + 1, y + 1, x + 16, y + 16, 0xFF373737);
+    private static boolean isInside(
+            double mouseX,
+            double mouseY,
+            int x,
+            int y,
+            int width,
+            int height
+    ) {
+        return mouseX >= x
+                && mouseX < x + width
+                && mouseY >= y
+                && mouseY < y + height;
     }
 }
