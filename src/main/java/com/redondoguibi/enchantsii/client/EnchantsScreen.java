@@ -66,8 +66,8 @@ public final class EnchantsScreen extends AbstractContainerScreen<EnchantsMenu> 
     @Override
     protected void renderLabels(GuiGraphics graphics, int mouseX, int mouseY) {
         graphics.drawString(font, title, 8, 6, 0xFFE0E0E0, false);
-        graphics.drawString(font, Component.translatable("screen.enchantsii.item"), 8, 39, 0xFFB8B8B8, false);
-        graphics.drawString(font, Component.translatable("screen.enchantsii.book"), 8, 68, 0xFFB8B8B8, false);
+        graphics.drawString(font, Component.translatable("screen.enchantsii.item"), 8, 24, 0xFFB8B8B8, false);
+        graphics.drawString(font, Component.translatable("screen.enchantsii.book"), 8, 53, 0xFFB8B8B8, false);
         graphics.drawString(font, playerInventory.getDisplayName(), 8, inventoryLabelY, 0xFFB8B8B8, false);
 
         if (minecraft != null && minecraft.player != null) {
@@ -130,7 +130,7 @@ public final class EnchantsScreen extends AbstractContainerScreen<EnchantsMenu> 
 
             graphics.fill(x, y, x + ROW_WIDTH, y + ROW_HEIGHT, background);
 
-            Component name = Enchantment.getFullname(source.enchantment(), source.sourceLevel());
+            Component name = Enchantment.getFullname(source.enchantment(), evaluation.maxLevel());
             graphics.drawString(
                     font,
                     trim(name),

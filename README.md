@@ -42,6 +42,8 @@ The lapis lazuli cost depends on the level being applied:
 - Level V: 6 lapis
 - In general: `lapis cost = target enchantment level + 1`
 
+Lapis lazuli is consumed automatically from the player's main inventory and hotbar; it does not need a dedicated table slot.
+
 Creative-mode players do not consume XP or lapis.
 
 ### Compatibility

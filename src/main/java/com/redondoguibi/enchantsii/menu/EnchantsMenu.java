@@ -99,6 +99,10 @@ public final class EnchantsMenu extends AbstractContainerMenu {
 
     @Override
     public boolean clickMenuButton(Player player, int id) {
+        if (!stillValid(player)) {
+            return false;
+        }
+
         List<EnchantingLogic.BookEnchantment> enchantments = getBookEnchantments();
         if (id < 0 || id >= enchantments.size()) {
             return false;
