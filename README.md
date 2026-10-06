@@ -56,7 +56,7 @@ Bookshelves do not change the cost or available enchantments. Progression comes 
 
 Anvils can still repair and rename items and can still combine enchanted books with enchanted books.
 
-Applying an enchanted book directly to equipment in an anvil is disabled so that the reusable enchanting-table system cannot be bypassed by consuming the book.
+Applying an enchanted book directly to equipment in an anvil is disabled. Combining equipment in a way that would add or upgrade enchantments is also blocked. This prevents a low-level reusable book from being duplicated across items and then upgraded through an anvil, while normal repairs and renames that preserve the left item's enchantments remain available.
 
 ## Status
 

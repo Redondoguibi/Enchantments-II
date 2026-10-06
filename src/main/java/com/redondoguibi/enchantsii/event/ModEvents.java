@@ -46,8 +46,17 @@ public final class ModEvents {
     }
 
     public static void onAnvilUpdate(AnvilUpdateEvent event) {
-        if (event.getRight().is(Items.ENCHANTED_BOOK)
-                && !event.getLeft().is(Items.ENCHANTED_BOOK)) {
+        if (event.getLeft().is(Items.ENCHANTED_BOOK)) {
+            return;
+        }
+
+        if (event.getRight().is(Items.ENCHANTED_BOOK)) {
+            event.setCanceled(true);
+            return;
+        }
+
+        if (!event.getOutput().isEmpty()
+                && !event.getOutput().getEnchantments().equals(event.getLeft().getEnchantments())) {
             event.setCanceled(true);
         }
     }
