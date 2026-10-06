@@ -22,14 +22,10 @@ public final class EnchantsScreen extends AbstractContainerScreen<EnchantsMenu> 
     private static final int GUI_WIDTH = 176;
     private static final int GUI_HEIGHT = 166;
 
-    // Cost boxes drawn into enchanting_table_2.png.
-    // Top: raw XP points. Bottom: lapis lazuli.
     private static final int COST_BOX_CENTER_X = 141;
     private static final int XP_TEXT_Y = 29;
     private static final int LAPIS_TEXT_Y = 48;
 
-    // The free strip between the custom controls and the player inventory is
-    // a real, visually explicit enchant button.
     private static final int SELECT_Y = 63;
     private static final int SELECT_HEIGHT = 20;
     private static final int SELECT_LEFT_ARROW_X = 7;
@@ -276,6 +272,8 @@ public final class EnchantsScreen extends AbstractContainerScreen<EnchantsMenu> 
             case INVALID_BOOK -> Component.translatable("screen.enchantsii.invalid_book");
             case NOT_SUPPORTED -> Component.translatable("screen.enchantsii.not_supported");
             case CONFLICT -> Component.translatable("screen.enchantsii.conflict");
+            case TOME_REQUIRES_ENCHANTMENT ->
+                    Component.translatable("screen.enchantsii.tome_requires_enchantment");
             case MAXED -> Component.translatable(
                     "screen.enchantsii.maxed",
                     evaluation.maxLevel()
