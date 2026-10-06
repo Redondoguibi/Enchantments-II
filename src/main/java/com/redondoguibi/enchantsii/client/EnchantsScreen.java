@@ -13,11 +13,11 @@ import java.util.List;
 public final class EnchantsScreen extends AbstractContainerScreen<EnchantsMenu> {
     private static final int ROWS_PER_PAGE = 3;
     private static final int ROW_X = 58;
-    private static final int ROW_Y = 18;
+    private static final int ROW_Y = 27;
     private static final int ROW_WIDTH = 182;
-    private static final int ROW_HEIGHT = 28;
-    private static final int ROW_STEP = 30;
-    private static final int NAV_Y = 111;
+    private static final int ROW_HEIGHT = 25;
+    private static final int ROW_STEP = 28;
+    private static final int NAV_Y = 110;
 
     private final Inventory playerInventory;
     private int page;
@@ -59,8 +59,8 @@ public final class EnchantsScreen extends AbstractContainerScreen<EnchantsMenu> 
         drawSlot(graphics, left + 22, top + 35);
         drawSlot(graphics, left + 22, top + 64);
 
-        graphics.fill(left + 54, top + 12, left + 244, top + 129, 0xFF171717);
-        graphics.fill(left + 55, top + 13, left + 243, top + 128, 0xFF222222);
+        graphics.fill(left + 54, top + 12, left + 244, top + 119, 0xFF171717);
+        graphics.fill(left + 55, top + 13, left + 243, top + 118, 0xFF222222);
     }
 
     @Override
@@ -69,41 +69,23 @@ public final class EnchantsScreen extends AbstractContainerScreen<EnchantsMenu> 
         graphics.drawString(font, Component.translatable("screen.enchantsii.item"), 8, 24, 0xFFB8B8B8, false);
         graphics.drawString(font, Component.translatable("screen.enchantsii.book"), 8, 53, 0xFFB8B8B8, false);
         graphics.drawString(font, playerInventory.getDisplayName(), 8, inventoryLabelY, 0xFFB8B8B8, false);
-
-        if (minecraft != null && minecraft.player != null) {
-            int xp = minecraft.player.totalExperience;
-            int lapis = EnchantingLogic.countLapis(minecraft.player.getInventory());
-
-            graphics.drawString(
-                    font,
-                    Component.translatable("screen.enchantsii.xp", xp, EnchantingLogic.XP_COST),
-                    8,
-                    92,
-                    xp >= EnchantingLogic.XP_COST || minecraft.player.getAbilities().instabuild
-                            ? 0xFF80FF80
-                            : 0xFFFF8080,
-                    false
-            );
-
-            graphics.drawString(
-                    font,
-                    Component.translatable("screen.enchantsii.lapis", lapis),
-                    8,
-                    104,
-                    0xFF80BFFF,
-                    false
-            );
-        }
     }
 
     private void renderEnchantments(GuiGraphics graphics, int mouseX, int mouseY) {
         List<EnchantingLogic.BookEnchantment> enchantments = menu.getBookEnchantments();
 
+        if (minecraft != null && minecraft.player != null) {
+            int xp = minecraft.player.totalExperience;
+            int lapis = EnchantingLogic.countLapis(minecraft.player.getInventory());
+            Component resources = Component.translatable("screen.enchantsii.resources", xp, lapis);
+            graphics.drawString(font, trim(resources), leftPos + ROW_X, topPos + 16, 0xFFB8B8B8, false);
+        }
+
         if (enchantments.isEmpty()) {
             Component message = menu.getBookStack().isEmpty()
                     ? Component.translatable("screen.enchantsii.insert_book")
                     : Component.translatable("screen.enchantsii.empty_book");
-            graphics.drawString(font, message, leftPos + 64, topPos + 22, 0xFFAAAAAA, false);
+            graphics.drawString(font, trim(message), leftPos + ROW_X, topPos + 40, 0xFFAAAAAA, false);
             return;
         }
 
