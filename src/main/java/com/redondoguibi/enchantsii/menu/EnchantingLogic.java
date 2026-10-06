@@ -1,5 +1,6 @@
 package com.redondoguibi.enchantsii.menu;
 
+import com.redondoguibi.enchantsii.integration.QuarkIntegration;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
@@ -21,12 +22,34 @@ public final class EnchantingLogic {
     private EnchantingLogic() {
     }
 
+    public static boolean isEnchantingSource(ItemStack stack) {
+        if (stack.is(Items.ENCHANTED_BOOK)) {
+            ItemEnchantments stored = stack.get(DataComponents.STORED_ENCHANTMENTS);
+            return stored != null && !stored.isEmpty();
+        }
+
+        if (QuarkIntegration.isAncientTome(stack)) {
+            ItemEnchantments stored = QuarkIntegration.getTomeEnchantments(stack);
+            return stored != null && !stored.isEmpty();
+        }
+
+        return false;
+    }
+
     public static List<BookEnchantment> getBookEnchantments(ItemStack book) {
-        if (!book.is(Items.ENCHANTED_BOOK)) {
+        ItemEnchantments stored;
+        SourceType sourceType;
+
+        if (book.is(Items.ENCHANTED_BOOK)) {
+            stored = book.get(DataComponents.STORED_ENCHANTMENTS);
+            sourceType = SourceType.ENCHANTED_BOOK;
+        } else if (QuarkIntegration.isAncientTome(book)) {
+            stored = QuarkIntegration.getTomeEnchantments(book);
+            sourceType = SourceType.QUARK_ANCIENT_TOME;
+        } else {
             return List.of();
         }
 
-        ItemEnchantments stored = book.get(DataComponents.STORED_ENCHANTMENTS);
         if (stored == null || stored.isEmpty()) {
             return List.of();
         }
@@ -34,7 +57,11 @@ public final class EnchantingLogic {
         List<BookEnchantment> result = new ArrayList<>();
         for (Object2IntMap.Entry<Holder<Enchantment>> entry : stored.entrySet()) {
             if (entry.getIntValue() > 0) {
-                result.add(new BookEnchantment(entry.getKey(), entry.getIntValue()));
+                result.add(new BookEnchantment(
+                        entry.getKey(),
+                        entry.getIntValue(),
+                        sourceType
+                ));
             }
         }
 
@@ -43,7 +70,10 @@ public final class EnchantingLogic {
     }
 
     public static Evaluation evaluate(ItemStack target, BookEnchantment source) {
-        int maxLevel = Math.min(source.sourceLevel(), source.enchantment().value().getMaxLevel());
+        int normalMaxLevel = source.enchantment().value().getMaxLevel();
+        int maxLevel = source.sourceType() == SourceType.QUARK_ANCIENT_TOME
+                ? normalMaxLevel + 1
+                : Math.min(source.sourceLevel(), normalMaxLevel);
 
         if (target.isEmpty()) {
             return new Evaluation(Status.NO_TARGET, 0, 0, maxLevel, 0);
@@ -59,12 +89,31 @@ public final class EnchantingLogic {
             return new Evaluation(Status.NOT_SUPPORTED, currentLevel, 0, maxLevel, 0);
         }
 
+        if (source.sourceType() == SourceType.QUARK_ANCIENT_TOME && currentLevel <= 0) {
+            return new Evaluation(
+                    Status.TOME_REQUIRES_ENCHANTMENT,
+                    currentLevel,
+                    0,
+                    maxLevel,
+                    0
+            );
+        }
+
         if (currentLevel >= maxLevel) {
-            return new Evaluation(Status.MAXED, currentLevel, currentLevel, maxLevel, currentLevel + 1);
+            return new Evaluation(
+                    Status.MAXED,
+                    currentLevel,
+                    currentLevel,
+                    maxLevel,
+                    currentLevel + 1
+            );
         }
 
         if (currentLevel == 0
-                && !EnchantmentHelper.isEnchantmentCompatible(target.getTagEnchantments().keySet(), source.enchantment())) {
+                && !EnchantmentHelper.isEnchantmentCompatible(
+                target.getTagEnchantments().keySet(),
+                source.enchantment()
+        )) {
             return new Evaluation(Status.CONFLICT, 0, 0, maxLevel, 0);
         }
 
@@ -132,13 +181,28 @@ public final class EnchantingLogic {
                 .orElse(enchantment.value().description().getString());
     }
 
-    public record BookEnchantment(Holder<Enchantment> enchantment, int sourceLevel) {
+    public record BookEnchantment(
+            Holder<Enchantment> enchantment,
+            int sourceLevel,
+            SourceType sourceType
+    ) {
     }
 
-    public record Evaluation(Status status, int currentLevel, int nextLevel, int maxLevel, int lapisCost) {
+    public record Evaluation(
+            Status status,
+            int currentLevel,
+            int nextLevel,
+            int maxLevel,
+            int lapisCost
+    ) {
         public boolean ready() {
             return status == Status.READY;
         }
+    }
+
+    public enum SourceType {
+        ENCHANTED_BOOK,
+        QUARK_ANCIENT_TOME
     }
 
     public enum Status {
@@ -147,6 +211,7 @@ public final class EnchantingLogic {
         INVALID_BOOK,
         NOT_SUPPORTED,
         CONFLICT,
+        TOME_REQUIRES_ENCHANTMENT,
         MAXED
     }
 }
