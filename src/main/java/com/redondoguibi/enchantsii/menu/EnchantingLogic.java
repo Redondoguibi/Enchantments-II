@@ -55,7 +55,7 @@ public final class EnchantingLogic {
 
         int currentLevel = target.getEnchantmentLevel(source.enchantment());
 
-        if (!source.enchantment().value().canEnchant(target)) {
+        if (!target.supportsEnchantment(source.enchantment())) {
             return new Evaluation(Status.NOT_SUPPORTED, currentLevel, 0, maxLevel, 0);
         }
 
@@ -64,7 +64,7 @@ public final class EnchantingLogic {
         }
 
         if (currentLevel == 0
-                && !EnchantmentHelper.isEnchantmentCompatible(target.getEnchantments().keySet(), source.enchantment())) {
+                && !EnchantmentHelper.isEnchantmentCompatible(target.getTagEnchantments().keySet(), source.enchantment())) {
             return new Evaluation(Status.CONFLICT, 0, 0, maxLevel, 0);
         }
 

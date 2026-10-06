@@ -56,7 +56,7 @@ public final class ModEvents {
         }
 
         if (!event.getOutput().isEmpty()
-                && !event.getOutput().getEnchantments().equals(event.getLeft().getEnchantments())) {
+                && !event.getOutput().getTagEnchantments().equals(event.getLeft().getTagEnchantments())) {
             event.setCanceled(true);
         }
     }
