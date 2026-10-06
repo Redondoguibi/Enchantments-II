@@ -11,5 +11,11 @@
   "screen.enchantsii.conflict": "Conflicts with an enchantment already on the item.",
   "screen.enchantsii.maxed": "Maximum source level reached: %s",
   "screen.enchantsii.ready": "Lv. %s -> %s | %s XP | %s lapis",
-  "screen.enchantsii.page": "%s / %s"
+  "screen.enchantsii.page": "%s / %s",
+  "screen.enchantsii.click_to_enchant": "CLICK TO ENCHANT",
+  "screen.enchantsii.cannot_enchant": "CAN'T ENCHANT",
+  "screen.enchantsii.tooltip.click": "Click the enchantment name to enchant.",
+  "screen.enchantsii.tooltip.need_xp": "Not enough XP. You need %s XP points.",
+  "screen.enchantsii.tooltip.need_lapis": "Not enough lapis lazuli. You need %s.",
+  "screen.enchantsii.tooltip.need_both": "You need %s XP points and %s lapis lazuli."
 }
