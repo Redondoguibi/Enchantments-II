@@ -48,7 +48,9 @@ public final class EnchantsMenu extends AbstractContainerMenu {
             }
         };
 
-        addSlot(new Slot(inputs, TARGET_SLOT, 22, 35) {
+        // Coordinates match the two input slots painted into
+        // assets/enchantsii/textures/gui/enchanting_table_2.png.
+        addSlot(new Slot(inputs, TARGET_SLOT, 26, 35) {
             @Override
             public boolean mayPlace(ItemStack stack) {
                 return !stack.is(Items.BOOK)
@@ -62,7 +64,7 @@ public final class EnchantsMenu extends AbstractContainerMenu {
             }
         });
 
-        addSlot(new Slot(inputs, BOOK_SLOT, 22, 64) {
+        addSlot(new Slot(inputs, BOOK_SLOT, 62, 35) {
             @Override
             public boolean mayPlace(ItemStack stack) {
                 return stack.is(Items.ENCHANTED_BOOK);
@@ -74,14 +76,20 @@ public final class EnchantsMenu extends AbstractContainerMenu {
             }
         });
 
+        // Standard 176x166 player inventory layout, aligned with the texture.
         for (int row = 0; row < 3; row++) {
             for (int column = 0; column < 9; column++) {
-                addSlot(new Slot(playerInventory, column + row * 9 + 9, 8 + column * 18, 132 + row * 18));
+                addSlot(new Slot(
+                        playerInventory,
+                        column + row * 9 + 9,
+                        8 + column * 18,
+                        84 + row * 18
+                ));
             }
         }
 
         for (int column = 0; column < 9; column++) {
-            addSlot(new Slot(playerInventory, column, 8 + column * 18, 190));
+            addSlot(new Slot(playerInventory, column, 8 + column * 18, 142));
         }
     }
 
