@@ -11,5 +11,11 @@
   "screen.enchantsii.conflict": "Conflita com um encantamento que já está no item.",
   "screen.enchantsii.maxed": "Nível máximo do livro atingido: %s",
   "screen.enchantsii.ready": "Nv. %s -> %s | %s XP | %s lápis",
-  "screen.enchantsii.page": "%s / %s"
+  "screen.enchantsii.page": "%s / %s",
+  "screen.enchantsii.click_to_enchant": "CLIQUE PARA ENCANTAR",
+  "screen.enchantsii.cannot_enchant": "NÃO É POSSÍVEL",
+  "screen.enchantsii.tooltip.click": "Clique no nome do encantamento para encantar.",
+  "screen.enchantsii.tooltip.need_xp": "XP insuficiente. Você precisa de %s pontos de XP.",
+  "screen.enchantsii.tooltip.need_lapis": "Lápis-lazúli insuficiente. Você precisa de %s.",
+  "screen.enchantsii.tooltip.need_both": "Você precisa de %s pontos de XP e %s lápis-lazúli."
 }
